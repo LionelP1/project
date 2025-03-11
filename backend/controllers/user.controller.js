@@ -1,4 +1,5 @@
 import User from '../models/user.model.js';
+import bcrypt from 'bcryptjs';
 
 export const getUserProfile = async (req, res) => {
     try {
@@ -82,7 +83,36 @@ export const updateUserProfile = async (req, res) => {
       res.status(500).json({ error: "Server error" });
     }
 };
-  
+
+export const changeUserPassword = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Incorrect current password" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+
 
 
 

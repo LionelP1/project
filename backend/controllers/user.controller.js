@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 
 export const getUserProfile = async (req, res) => {
-    try {
+  try {
       const user = await User.findById(req.user._id).select("-password");
   
       if (!user) {

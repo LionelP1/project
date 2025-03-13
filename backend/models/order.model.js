@@ -28,10 +28,9 @@ const OrderSchema = new mongoose.Schema({
         enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
         default: 'pending'
     },
-    deliveryAgent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: null
+    isDeliveryAssigned: {
+        type: Boolean,
+        default: false
     },
     createdAt: {
         type: Date,

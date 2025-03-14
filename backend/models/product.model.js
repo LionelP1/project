@@ -21,7 +21,11 @@ const ProductSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        default: 'default.jpg'
+        default: ''
+    },
+    imageId: {
+        type: String,
+        default: ''
     },
     farmer: {
         type: mongoose.Schema.Types.ObjectId,

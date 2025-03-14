@@ -1,5 +1,6 @@
 import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
+import cloudinary from '../config/cloudinary.js';
 
 export const getUserProfile = async (req, res) => {
   try {
@@ -27,61 +28,69 @@ export const getUserProfile = async (req, res) => {
       res.status(500).json({ error: "Server error" });
     }
 };
+import User from '../models/user.model.js';
+import cloudinary from '../config/cloudinary.js';
 
 export const updateUserProfile = async (req, res) => {
-    try {
-      const user = await User.findById(req.user._id);
-  
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-  
-      const { fullName, username, email, gender, phone, address, profilePicture } = req.body;
-  
-      if (username && username !== user.username) {
-        const usernameExists = await User.findOne({ username });
-        if (usernameExists) {
-          return res.status(400).json({ error: "Username already taken" });
-        }
-      }
-  
-      if (email && email !== user.email) {
-        const emailExists = await User.findOne({ email });
-        if (emailExists) {
-          return res.status(400).json({ error: "Email already taken" });
-        }
-      }
-  
-      user.fullName = fullName || user.fullName;
-      user.username = username || user.username;
-      user.email = email || user.email;
-      user.gender = gender || user.gender;
-      user.phone = phone || user.phone;
-      user.address = address || user.address;
-      user.profilePicture = profilePicture || user.profilePicture;
-  
-      const updatedUser = await user.save();
-  
-      res.status(200).json({
-        message: "Profile updated successfully",
-        user: {
-          _id: updatedUser._id,
-          fullName: updatedUser.fullName,
-          username: updatedUser.username,
-          email: updatedUser.email,
-          gender: updatedUser.gender,
-          role: updatedUser.role,
-          phone: updatedUser.phone,
-          address: updatedUser.address,
-          profilePicture: updatedUser.profilePicture,
-          createdAt: updatedUser.createdAt,
-        },
-      });
-      
-    } catch (error) {
-      console.error("Error updating user profile:", error);
-      res.status(500).json({ error: "Server error" });
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
+
+    const { fullName, username, email, gender, phone, address } = req.body;
+
+    if (username && username !== user.username) {
+      const usernameExists = await User.findOne({ username });
+      if (usernameExists) {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
+    }
+
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({ error: 'Email already taken' });
+      }
+    }
+
+    if (req.file) {
+      if (user.profilePictureId) {
+        await cloudinary.uploader.destroy(user.profilePictureId);
+      }
+
+      user.profilePicture = req.file.path;
+      user.profilePictureId = req.file.filename;
+    }
+
+    user.fullName = fullName || user.fullName;
+    user.username = username || user.username;
+    user.email = email || user.email;
+    user.gender = gender || user.gender;
+    user.phone = phone || user.phone;
+    user.address = address || user.address;
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: {
+        _id: updatedUser._id,
+        fullName: updatedUser.fullName,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        gender: updatedUser.gender,
+        role: updatedUser.role,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        profilePicture: updatedUser.profilePicture,
+        createdAt: updatedUser.createdAt,
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 };
 
 export const changeUserPassword = async (req, res) => {
